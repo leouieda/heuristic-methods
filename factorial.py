@@ -4,6 +4,7 @@ prime number factorization.
 """
 
 import math
+
 import primate
 
 
@@ -13,9 +14,11 @@ def rfactorial(x):
     """
     
     if x == 1:
+        
         return 1
 
     else:
+        
         return x*rfactorial(x - 1)
 
 
