@@ -1,14 +1,8 @@
 """
-Monte Carlo optimizers.
+Collection of Monte Carlo optimizers 
 """
 
 import numpy
-
-
-def twomin(x):
-    
-    return (x + 0.5)**4 - 30*(x**2) - 20*x
-
 
 def flip(bias):
     """
@@ -29,11 +23,9 @@ def flip(bias):
     else:
         
         return 1
-    
-    
+        
 
-# TODO: allow for different lower and upper for each dimension 
-def randwalk(func, dims, randnum, lower, upper):
+def randwalk(func, dims, lower, upper, steps, maxit, threshold=0.40):
     """
     Optimize using a random walk.
     
@@ -43,72 +35,145 @@ def randwalk(func, dims, randnum, lower, upper):
         
         dims: number of arguments the function receives
         
-        randnum: number of random points to generate
+        lower: array with lower bounds of the parameter space
         
-        lower: lower bound of the parameter space
+        upper: array with upper bounds of the parameter space
         
-        upper: upper bound of the parameter space
+        steps: step size in each dimension
+        
+        maxit: maximum iterations
+        
+        threshold: chance of accepting an upward step (range [0:1])
         
     Returns:
     
-        [values, parameters, 
+        [best_goal, best_estimate, goals, estimates]:
+        
+            best_goal: the smallest value of the goal function that was found
+            
+            best_estimate: point in the parameter space where 'best_goal' was 
+                           found
+                           
+            goals: list of the goal function through the iterations
+            
+            estimates: list of the points where 'goals' where found  
     """
     
-    estimates = []
+    max_inner = 20
     
-    values = []
+    # Make an initial estimate
+    estimate = []
     
-    for i in xrange(randnum):
+    for i in xrange(dims):
+        
+        estimate.append(numpy.random.uniform(lower[i], upper[i]))
+        
+    estimate = numpy.array(estimate)
+    
+    # Keep all the steps recorded
+    estimates = [estimate]
+    
+    goals = [func(*estimate)]    
                 
-        estimate = numpy.random.uniform(lower, upper, dims)
-        
-        value = func(*estimate)
-        
-        if i != 0:
-        
-            if value < values[-1]:            
-        
-                estimates.append(estimate)
-    
-                values.append(value)
-                
-            elif flip(0.20):     
-        
-                estimates.append(estimate)
-    
-                values.append(value)
-    
-        else:     
-        
-            estimates.append(estimate)
-    
-            values.append(value)
-            
-    # Sort the values and estimates
-    indexes = numpy.argsort(values)
+    # Start walking on the parameter space    
+    step = numpy.empty_like(estimate)
 
-    sorted_vals = []
-    
-    sorted_params = []
-    
-    for i in xrange(len(values)):
+    for iteration in xrange(maxit):
         
-        sorted_vals.append(values[indexes[i]])
-    
-        sorted_params.append(estimates[indexes[i]].tolist())
+        for i in xrange(dims):
+            
+            step[i] = numpy.random.uniform(-steps[i], steps[i])
+            
+        tmp = estimate + step
+        
+        goal = func(*tmp)
+        
+        inner_it = 0
+        
+        while goal >= goals[-1]:
+        
+            for i in xrange(dims):
+            
+                step[i] = numpy.random.uniform(-steps[i], steps[i])
+            
+            tmp = estimate + step
+        
+            goal = func(*tmp)
+                 
+            if goal >= goals[-1] and flip(threshold) or inner_it >= max_inner:
                 
-    return sorted_vals, sorted_params
+                if inner_it >= max_inner:
+                    
+                    step = numpy.zeros_like(step)
+                    
+                break
+            
+            inner_it += 1
+            
+        estimate = estimate + step
+        
+        # Mark the best estimate so far
+        if iteration != 0:
+            
+            if goal < best_goal:
+                
+                best_goal = goal
+                
+                best_estimate = numpy.copy(estimate)
+        
+        else:
+            
+            best_goal = goal
+            
+            best_estimate = numpy.copy(estimate)         
+        
+        estimates.append(estimate)
+
+        goals.append(goal)     
+        
+    return best_goal, best_estimate, goals, numpy.array(estimates)
+
 
 
 if __name__ == '__main__':
+        
+    import pylab
+    from test_functions import eggbox
     
-    vals, params = randwalk(func=twomin, dims=1, \
-                            randnum=10, lower=-10, upper=10)
+    print "Minimizing an eggbox function using random walk" 
     
-    print "Max:"    
-    print vals[0]
-    print "Parameter:"
-    print params[0]
+    x = numpy.arange(-25, 25.5, 0.5)
+    y = numpy.arange(-25, 25.5, 0.5)    
+    X, Y = pylab.meshgrid(x, y)
+    Z = eggbox(X, Y)
     
+    best_goal, best_estimate, goals, estimates = randwalk(func=eggbox, dims=2, \
+                        lower=(-20,-20), upper=(20,20), \
+                        steps=(10,10), maxit=500, threshold=0.4)
+        
+    print "Best solution:", best_goal
+    print "at:", best_estimate
+        
+    fig = pylab.figure()
     
+    pylab.title("Eggbox")
+    pylab.contourf(X, Y, Z, 40)
+    pylab.colorbar()
+    
+    pylab.plot(estimates.T[0], estimates.T[1], '*k')   
+    pylab.plot(0, 0, 'oy', label='global minimum')    
+    pylab.plot(best_estimate[0], best_estimate[1], '^c', label='best solution') 
+    pylab.legend(numpoints=1, prop={'size':9})
+        
+    pylab.xlabel("X")
+    pylab.ylabel("Y")
+    pylab.xlim(-25, 25)
+    pylab.ylim(-25, 25)
+    
+    pylab.figure()
+    pylab.title("Eggbox Goal function")
+    pylab.plot(goals, '-k')
+    pylab.xlabel("Iteration")
+    
+    pylab.show()
     
