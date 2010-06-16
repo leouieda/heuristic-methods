@@ -134,6 +134,41 @@ def randwalk(func, dims, lower, upper, steps, maxit, threshold=0.40):
     return best_goal, best_estimate, goals, numpy.array(estimates)
 
 
+def simulated_annealing(func, dims, lower, upper, step, maxit, threshold=0.40):
+    """
+    Optimize using Simulated Annealing.
+    
+    Parameters:
+        
+        func: function object to be optimized
+        
+        dims: number of arguments the function receives
+        
+        lower: array with lower bounds of the parameter space
+        
+        upper: array with upper bounds of the parameter space
+        
+        step: list with the step sizes in each dimension
+        
+        maxit: maximum iterations
+        
+        threshold: chance of accepting an upward step (range [0:1])
+        
+    Returns:
+    
+        [best_goal, best_estimate, goals, estimates]:
+        
+            best_goal: the smallest value of the goal function that was found
+            
+            best_estimate: point in the parameter space where 'best_goal' was 
+                           found
+                           
+            goals: list of the goal function through the iterations
+            
+            estimates: list of the points where 'goals' where found  
+    """
+    pass
+
 
 if __name__ == '__main__':
         

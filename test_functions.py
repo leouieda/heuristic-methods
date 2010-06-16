@@ -7,7 +7,7 @@ import numpy
 
 def twomin(x):
     
-    return (x + 0.5)**4 - 30*(x**2) - 20*x
+    return (x + 0.5)**4 - 50*(x**2) - 20*x
 
 
 def eggbox(x, y):
