@@ -12,4 +12,4 @@ def twomin(x):
 
 def eggbox(x, y):
     
-    return 100*numpy.sin(x + 1.5*numpy.pi)*numpy.cos(y) + x**2 + y**2
+    return 200*numpy.sin(x + 1.5*numpy.pi)*numpy.cos(y) + x**2 + y**2
