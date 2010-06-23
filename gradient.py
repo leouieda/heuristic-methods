@@ -92,7 +92,7 @@ def newton(func, dims, initial, maxit=100, stop=10**(-15)):
         
         goals.append(func(*solution))
         
-        if abs(goals[i] - goals[i - 1])/goals[i - 1] <= stop:
+        if abs((goals[i] - goals[i - 1])/goals[i - 1]) <= stop:
             
             break
         

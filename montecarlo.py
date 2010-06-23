@@ -28,7 +28,7 @@ def flip(bias):
         return 1
         
 
-def randwalk(func, dims, lower, upper, step_sizes, maxit, threshold=0.40):
+def randwalk(func, dims, lower, upper, num_solutions, threshold=0.40):
     """
     Optimize using a random walk.
     
@@ -61,79 +61,54 @@ def randwalk(func, dims, lower, upper, step_sizes, maxit, threshold=0.40):
             
             estimates: list of the points where 'goals' where found  
     """
-    
-    max_inner = 20
-    
-    # Make an initial estimate
-    estimate = []
-    
-    for i in xrange(dims):
         
-        estimate.append(numpy.random.uniform(lower[i], upper[i]))
-        
-    estimate = numpy.array(estimate)
-    
     # Keep all the steps recorded
-    estimates = [estimate]
+    estimates = []
     
-    goals = [func(*estimate)]    
-                
-    # Start walking on the parameter space    
-    step = numpy.empty_like(estimate)
-
-    for iteration in xrange(maxit):
+    goals = []
+    
+    solution_i = 0
         
-        for i in xrange(dims):
+    while solution_i < threshold*num_solutions:
+        
+        for j in xrange(num_solutions):
             
-            step[i] = numpy.random.uniform(-step_sizes[i], step_sizes[i])
+            tmp = numpy.zeros(dims)
             
-        tmp = estimate + step
-        
-        goal = func(*tmp)
-        
-        inner_it = 0
-        
-        while goal >= goals[-1]:
-        
             for i in xrange(dims):
-            
-                step[i] = numpy.random.uniform(-step_sizes[i], step_sizes[i])
-            
-            tmp = estimate + step
-        
+                
+                tmp[i] = numpy.random.uniform(lower[i], upper[i])
+                
             goal = func(*tmp)
-                 
-            if goal >= goals[-1] and flip(threshold) or inner_it >= max_inner:
+        
+            if solution_i == 0:
                 
-                if inner_it >= max_inner:
+                survival_prob = 1
+                
+            else:
+                
+                survival_prob = abs((max(goals) - goal)/(max(goals) - min(goals)))
+            
+            if flip(survival_prob):
+                
+                estimate = tmp
+                
+                if solution_i == 0 or goal < best_goal:
                     
-                    step = numpy.zeros_like(step)
+                    best_goal = goal
                     
-                break
-            
-            inner_it += 1
-            
-        estimate = estimate + step
-        
-        # Mark the best estimate so far
-        if iteration != 0:
-            
-            if goal < best_goal:
+                    best_estimate = estimate
                 
-                best_goal = goal
+                estimates.append(estimate)
                 
-                best_estimate = numpy.copy(estimate)
-        
-        else:
-            
-            best_goal = goal
-            
-            best_estimate = numpy.copy(estimate)         
-        
-        estimates.append(estimate)
-
-        goals.append(goal)     
-        
+                goals.append(goal)
+                
+                solution_i += 1
+                
+                if solution_i == num_solutions:
+                    
+                    break
+                
     return best_goal, best_estimate, goals, numpy.array(estimates)
 
 
@@ -195,10 +170,10 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
     step = numpy.empty_like(estimate)    
 
     for temperature in numpy.arange(tstart, tfinal - tstep, -tstep, dtype='f'):
-                
-        iteration = 0
+       
+        accepted = 0
         
-        while iteration < it_per_t:
+        for iteration in xrange(it_per_t):
             
             # Make a random perturbation
             for i in xrange(dims):
@@ -215,14 +190,14 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
             
             if delta_goal > 0 or flip(survival_prob):
             
-                msg = "Temp: %g  iterations: %d  goal: %g" \
-                    % (temperature, iteration + 1, goal)
-                    
-                if delta_goal <= 0:
-                    
-                    msg += "  survival: %g" % (survival_prob)
-
-                print msg
+#                msg = "Temp: %g  iterations: %d  goal: %g" \
+#                    % (temperature, iteration + 1, goal)
+#                    
+#                if delta_goal <= 0:
+#                    
+#                    msg += "  survival: %g" % (survival_prob)
+#
+#                print msg
                             
                 estimate = tmp
                 
@@ -234,17 +209,15 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
                 
                 estimates.append(estimate)
                 
-                goals.append(goal)              
-    
-                break
-            
-            iteration += 1
+                goals.append(goal)
+                
+                accepted += 1
         
-#        if iteration == it_per_t:
-#            
-#            print "Max iterations reached and couldn't decrease goal"
+        if accepted == 0:
             
-#            break
+            print "Exited due to frozen system: temp = %g" % (temperature)
+            
+            break
         
     return best_goal, best_estimate, goals, numpy.array(estimates)     
     
@@ -254,11 +227,11 @@ if __name__ == '__main__':
         
     import pylab
     from test_functions import eggbox
+    import gradient
     
     bot = -20
     top = 20
-    step = (top - bot)/(50. - 1.)
-    step_s = (5,5)
+    step = (top - bot)/(100. - 1.)
         
     x = numpy.arange(bot, top + step, step)
     y = numpy.arange(bot, top + step, step)    
@@ -269,10 +242,12 @@ if __name__ == '__main__':
 #    
 #    best_goal, best_estimate, goals, estimates = randwalk(func=eggbox, dims=2, \
 #                        lower=(-20,-20), upper=(20,20), \
-#                        step_sizes=(10,10), maxit=500, threshold=0.4)
+#                        num_solutions=500, threshold=0.8)
 #        
-#    print "  Best solution:", best_goal
+#    print "  Best solution of", len(goals), ":", best_goal
 #    print "  at:", best_estimate
+#        
+##    print "  All solutions:\n", numpy.array([estimates.T[0], estimates.T[1], goals]).T
 #        
 #    fig = pylab.figure()
 #    
@@ -287,8 +262,8 @@ if __name__ == '__main__':
 #        
 #    pylab.xlabel("X")
 #    pylab.ylabel("Y")
-#    pylab.xlim(-25, 25)
-#    pylab.ylim(-25, 25)
+#    pylab.xlim(bot, top)
+#    pylab.ylim(bot, top)
 #    
 #    pylab.figure()
 #    pylab.title("Random Walk Goal function")
@@ -300,20 +275,21 @@ if __name__ == '__main__':
     
     best_goal, best_estimate, goals, estimates = simulated_annealing( \
         func=eggbox, dims=2, lower=(bot,bot), upper=(top,top), \
-        step_sizes=step_s, tstart=1000, tfinal=1, tstep=1, it_per_t=100)
+        step_sizes=(1,1), tstart=500, tfinal=1, tstep=1, it_per_t=10)
         
-    print "  Best solution:", best_goal
+    print "  Best solution of %d: %g" % (len(goals), best_goal)
     print "  at:", best_estimate
         
     fig = pylab.figure()
     
     pylab.title("Simulated Annealing Eggbox")
-    pylab.contourf(X, Y, Z, 40)
+    pylab.pcolor(X, Y, Z)
     pylab.colorbar()
     
     pylab.plot(estimates.T[0], estimates.T[1], '.k')   
     pylab.plot(0, 0, 'oy', label='global minimum')    
     pylab.plot(best_estimate[0], best_estimate[1], 'sc', label='best solution')
+    pylab.plot(estimates.T[0][-1], estimates.T[1][-1], 'sm', label='final solution')
     pylab.plot(estimates.T[0][0], estimates.T[1][0], '^m', label='starting solution') 
     pylab.legend(numpoints=1, prop={'size':9})
         
@@ -323,7 +299,37 @@ if __name__ == '__main__':
     pylab.ylim(bot, top)
     
     pylab.figure()
-    pylab.title("Simulated Annealing Goal function")
+    pylab.title("Simulated Annealing Goal Function")
+    pylab.plot(goals, '-k')
+    pylab.xlabel("Iteration")
+    
+    print "Improve solution with Gauss-Newton:"
+    
+    best_estimate, best_goal, estimates, goals = gradient.newton(\
+        func=eggbox, dims=2, initial=best_estimate, maxit=100, stop=10**(-15))
+        
+    print "  Best solution: %g" % (best_goal)
+    print "  at:", best_estimate
+        
+    fig = pylab.figure()
+    
+    pylab.title("Gauss-Newton Eggbox")
+    pylab.contourf(X, Y, Z, 40)
+    pylab.colorbar()
+    
+    pylab.plot(estimates.T[0], estimates.T[1], '-k')   
+    pylab.plot(0, 0, 'oy', label='global minimum')    
+    pylab.plot(best_estimate[0], best_estimate[1], 'sc', label='best solution') 
+    pylab.plot(estimates.T[0][0], estimates.T[1][0], '^m', label='starting solution') 
+    pylab.legend(numpoints=1, prop={'size':9})
+        
+    pylab.xlabel("X")
+    pylab.ylabel("Y")
+    pylab.xlim(bot, top)
+    pylab.ylim(bot, top)
+    
+    pylab.figure()
+    pylab.title("Gauss-Newton Eggbox Goal Function")
     pylab.plot(goals, '-k')
     pylab.xlabel("Iteration")
     
