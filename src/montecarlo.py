@@ -179,6 +179,16 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
             for i in xrange(dims):
                 
                 step[i] = numpy.random.uniform(-step_sizes[i], step_sizes[i])
+                
+                # If the step takes the estimate out of the bounds, bring it
+                # back.
+                if estimate[i] + step[i] > upper[i]:
+                    
+                    step[i] = -step[i]
+                    
+                if estimate[i] + step[i] < lower[i]:
+                                        
+                    step[i] = -step[i]           
                     
             tmp = estimate + step
             
@@ -275,7 +285,7 @@ if __name__ == '__main__':
     
     best_goal, best_estimate, goals, estimates = simulated_annealing( \
         func=eggbox, dims=2, lower=(bot,bot), upper=(top,top), \
-        step_sizes=(1,1), tstart=500, tfinal=1, tstep=1, it_per_t=10)
+        step_sizes=(0.5,0.5), tstart=500, tfinal=0.1, tstep=1, it_per_t=20)
         
     print "  Best solution of %d: %g" % (len(goals), best_goal)
     print "  at:", best_estimate
@@ -286,7 +296,7 @@ if __name__ == '__main__':
     pylab.pcolor(X, Y, Z)
     pylab.colorbar()
     
-    pylab.plot(estimates.T[0], estimates.T[1], '.k')   
+    pylab.plot(estimates.T[0], estimates.T[1], '-k')   
     pylab.plot(0, 0, 'oy', label='global minimum')    
     pylab.plot(best_estimate[0], best_estimate[1], 'sc', label='best solution')
     pylab.plot(estimates.T[0][-1], estimates.T[1][-1], 'sm', label='final solution')

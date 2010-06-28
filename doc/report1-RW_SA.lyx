@@ -1,0 +1,220 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language brazilian
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing onehalf
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Métodos Heurísticos:
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+
+\backslash
+
+\end_layout
+
+\end_inset
+
+ Random Walk e Simulated Annealing
+\end_layout
+
+\begin_layout Author
+Leonardo Uieda
+\end_layout
+
+\begin_layout Date
+28 de Junho de 2010
+\end_layout
+
+\begin_layout Section
+Resumo dos métodos
+\end_layout
+
+\begin_layout Standard
+Random Walk (RW) e Simulated Annealing (SA) são métodos de otimização global
+ que exploram o espaço das soluções utilizando um 
+\begin_inset Quotes eld
+\end_inset
+
+andar do bêbado
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Como não utilizam informação sobre o gradiente da função, estes métodos
+ não ficam presos em mínimos locais.
+ Porém, uma varredura suficientemente abrangente do espaço das soluções
+ possui um custo computacional muito elevado.
+ Além disso, não há garantia de que o mínimo global da função seja achado.
+ No entando, é razoável pensar que a solução obtida estará nas redondezas
+ deste mínimo.
+ Por isso é comum refinar a solução utilizando métodos gradientes.
+\end_layout
+
+\begin_layout Section
+Sobre a geração de soluções
+\end_layout
+
+\begin_layout Standard
+Ambos RW e SA requerem a restrição do espaço das soluções, i.
+ e.
+ a definição de um domínio de busca.
+ No caso do RW, a geração de estimativas é feita de forma aleatória com
+ densidade de probabilidade homogênea no domínio definido.
+ Isso significa que 
+\shape italic
+i
+\shape default
+-ésima estimativa tem igual probabilidade de estar em qualquer ponto do
+ domínio de busca.
+ Depois de geradas, as estimativas são selecionadas de acordo com algum
+ critério, geralmente involvendo a definição de uma probabilidade de sobrevivênc
+ia.
+ Assim é possível construir uma população de soluções sobreviventes.
+\end_layout
+
+\begin_layout Standard
+No SA, a 
+\shape italic
+i
+\shape default
+-ésima estimativa é obtida perturbando a anterior com um passo aleatório.
+ Assim, a i-ésima estimativa tem densidade de probabilidade homogênea em
+ uma região entorno da solução anterior.
+ O critério utilizado para aceitar ou rejeitar um passo é dado pelo critério
+ de Metropolis: passos que diminuem a função objetivo são aceitos com propabilid
+ade 1; já passos que aumentam a função objetivo são aceitos segundo a probabilid
+ade
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+p=e^{-\dfrac{\Delta\phi}{T}}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+onde 
+\begin_inset Formula $\Delta\phi$
+\end_inset
+
+ é a variação da função objetivo resultante do passo e 
+\begin_inset Formula $T$
+\end_inset
+
+ é denominada 
+\begin_inset Quotes eld
+\end_inset
+
+temperatura
+\begin_inset Quotes erd
+\end_inset
+
+ do sistema.
+ Desta forma o SA caminha em direção ao mínimo da função objetivo porém
+ não fica preso a mínimos locais enquanto 
+\begin_inset Formula $T$
+\end_inset
+
+ for alta.
+ Esta 
+\begin_inset Quotes eld
+\end_inset
+
+caminhada
+\begin_inset Quotes erd
+\end_inset
+
+ é feita de forma aleatória e não utiliza informações do gradiente da função.
+\end_layout
+
+\begin_layout Section
+Parâmetros que controlam a busca
+\end_layout
+
+\begin_layout Standard
+Os parâmetros que devem ser definidos antes de executar o SA são:
+\end_layout
+
+\begin_layout Itemize
+Temperatura inicial
+\end_layout
+
+\begin_layout Itemize
+Temperatura final
+\end_layout
+
+\begin_layout Itemize
+Taxa de resfriamento
+\end_layout
+
+\begin_layout Itemize
+Tamanho máximo do passo
+\end_layout
+
+\begin_layout Itemize
+Número de perturbações (passos) por etapa de resfriamento
+\end_layout
+
+\begin_layout Standard
+Estes parâmetros influenciam quão explorado será o espaço das soluções e,
+ consequentemente, a eficiência do algoritmo em encontrar o mínimo global
+ da função objetivo.
+ Ao definir estes parâmetros é necessário ter em mente que há um compromisso
+ entre esforço computacional e abrangência da busca.
+ 
+\end_layout
+
+\end_body
+\end_document
