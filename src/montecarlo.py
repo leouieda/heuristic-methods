@@ -26,7 +26,104 @@ def flip(bias):
     else:
         
         return 1
+
+
+def mutation(value, lower, upper, size):
+    
+    # Define a random size for the mutation in the domain
+    deltav = size*(upper - lower)
+    
+    vmax = value + deltav
+    
+    vmin = value - deltav
+
+    if vmax > upper:
         
+        # Percentage of the the total mutation size that fell in the domain
+        bias = (upper - value)/deltav
+        
+        mutated = numpy.random.uniform(vmin, upper)
+        
+        # This compensated for the smaller region after 'value'
+        while not (mutated >= value or flip(bias)):
+        
+            mutated = numpy.random.uniform(vmin, upper)
+            
+    elif vmin < lower:
+        
+        # Do the same as above but in the case where the mutation size breaches
+        # the lower bound of the domain
+        bias = (value - lower)/deltav
+                        
+        mutated = numpy.random.uniform(lower, vmax)
+        
+        # This compensated for the smaller region after 'value'
+        while not (mutated <= value or flip(bias)):
+        
+            mutated = numpy.random.uniform(lower, vmax)
+            
+    else:
+        
+        # If the mutation size doesn't breach the domain bounds, just make a 
+        # random mutation        
+        mutated = numpy.random.uniform(vmin, vmax)
+        
+    return mutated
+
+
+def mutated_rw(func, lower, upper, num_agentes, prob_mutation, size_mutation):
+    
+    # Generate random agents
+    agents = numpy.zeros(num_agentes)
+    
+    goals = numpy.zeros(num_agentes)
+    
+    for i in xrange(num_agentes):
+        
+        agents[i] = numpy.random.uniform(lower, upper)
+        
+        goals[i] = func(agents[i])
+        
+    survivors = []
+    
+    while len(survivors) != num_agentes:
+        
+        # Kill all the unworthy! (according to a survival probability)        
+        for i in xrange(num_agentes):
+                        
+            survival_prob = (goals[i] - min(goals))/max(goals)
+            
+            if flip(survival_prob):
+                
+                survivors.append(agents[i])
+                
+        # Mutate the survivors
+        for i in xrange(len(survivors)):
+            
+            if flip(prob_mutation):
+            
+                agents[i] = mutation(survivors[i], lower, upper, size_mutation)
+            
+            else:
+                
+                agents[i] = survivors[i]
+            
+            goals[i] = func(agents[i])
+            
+        for i in xrange(len(survivors), num_agentes):
+            
+            agents[i] = numpy.random.uniform(lower, upper)
+            
+            goals[i] = func(agents[i])
+            
+        survivors = []
+        
+    return agents, goals
+            
+                
+                 
+    
+            
 
 def randwalk(func, dims, lower, upper, num_solutions, threshold=0.40):
     """
@@ -167,9 +264,13 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
     
     goals = [goal]
         
-    step = numpy.empty_like(estimate)    
+    step = numpy.empty_like(estimate)
+    
+    time_steps = numpy.arange(0, tfinal+1, 1, 'f')
+    
+    cooling_schedule = tstart*0.99**(time_steps)
 
-    for temperature in numpy.arange(tstart, tfinal - tstep, -tstep, dtype='f'):
+    for temperature in cooling_schedule:
        
         accepted = 0
         
@@ -199,16 +300,7 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
             survival_prob = math.exp(delta_goal/temperature)
             
             if delta_goal > 0 or flip(survival_prob):
-            
-#                msg = "Temp: %g  iterations: %d  goal: %g" \
-#                    % (temperature, iteration + 1, goal)
-#                    
-#                if delta_goal <= 0:
-#                    
-#                    msg += "  survival: %g" % (survival_prob)
-#
-#                print msg
-                            
+                                            
                 estimate = tmp
                 
                 if goal < best_goal:
@@ -222,7 +314,7 @@ def simulated_annealing(func, dims, lower, upper, step_sizes, \
                 goals.append(goal)
                 
                 accepted += 1
-        
+                
         if accepted == 0:
             
             print "Exited due to frozen system: temp = %g" % (temperature)
@@ -247,7 +339,7 @@ if __name__ == '__main__':
     y = numpy.arange(bot, top + step, step)    
     X, Y = pylab.meshgrid(x, y)
     Z = eggbox(X, Y)
-    
+        
 #    print "Random Walk:" 
 #    
 #    best_goal, best_estimate, goals, estimates = randwalk(func=eggbox, dims=2, \
@@ -285,7 +377,7 @@ if __name__ == '__main__':
     
     best_goal, best_estimate, goals, estimates = simulated_annealing( \
         func=eggbox, dims=2, lower=(bot,bot), upper=(top,top), \
-        step_sizes=(0.5,0.5), tstart=500, tfinal=0.1, tstep=1, it_per_t=20)
+        step_sizes=(0.1,0.1), tstart=1500, tfinal=1500, tstep=1, it_per_t=20)
         
     print "  Best solution of %d: %g" % (len(goals), best_goal)
     print "  at:", best_estimate
@@ -313,35 +405,35 @@ if __name__ == '__main__':
     pylab.plot(goals, '-k')
     pylab.xlabel("Iteration")
     
-    print "Improve solution with Gauss-Newton:"
-    
-    best_estimate, best_goal, estimates, goals = gradient.newton(\
-        func=eggbox, dims=2, initial=best_estimate, maxit=100, stop=10**(-15))
-        
-    print "  Best solution: %g" % (best_goal)
-    print "  at:", best_estimate
-        
-    fig = pylab.figure()
-    
-    pylab.title("Gauss-Newton Eggbox")
-    pylab.contourf(X, Y, Z, 40)
-    pylab.colorbar()
-    
-    pylab.plot(estimates.T[0], estimates.T[1], '-k')   
-    pylab.plot(0, 0, 'oy', label='global minimum')    
-    pylab.plot(best_estimate[0], best_estimate[1], 'sc', label='best solution') 
-    pylab.plot(estimates.T[0][0], estimates.T[1][0], '^m', label='starting solution') 
-    pylab.legend(numpoints=1, prop={'size':9})
-        
-    pylab.xlabel("X")
-    pylab.ylabel("Y")
-    pylab.xlim(bot, top)
-    pylab.ylim(bot, top)
-    
-    pylab.figure()
-    pylab.title("Gauss-Newton Eggbox Goal Function")
-    pylab.plot(goals, '-k')
-    pylab.xlabel("Iteration")
+#    print "Improve solution with Gauss-Newton:"
+#    
+#    best_estimate, best_goal, estimates, goals = gradient.newton(\
+#        func=eggbox, dims=2, initial=best_estimate, maxit=100, stop=10**(-15))
+#        
+#    print "  Best solution: %g" % (best_goal)
+#    print "  at:", best_estimate
+#        
+#    fig = pylab.figure()
+#    
+#    pylab.title("Gauss-Newton Eggbox")
+#    pylab.contourf(X, Y, Z, 40)
+#    pylab.colorbar()
+#    
+#    pylab.plot(estimates.T[0], estimates.T[1], '-k')   
+#    pylab.plot(0, 0, 'oy', label='global minimum')    
+#    pylab.plot(best_estimate[0], best_estimate[1], 'sc', label='best solution') 
+#    pylab.plot(estimates.T[0][0], estimates.T[1][0], '^m', label='starting solution') 
+#    pylab.legend(numpoints=1, prop={'size':9})
+#        
+#    pylab.xlabel("X")
+#    pylab.ylabel("Y")
+#    pylab.xlim(bot, top)
+#    pylab.ylim(bot, top)
+#    
+#    pylab.figure()
+#    pylab.title("Gauss-Newton Eggbox Goal Function")
+#    pylab.plot(goals, '-k')
+#    pylab.xlabel("Iteration")
     
     pylab.show()
     
