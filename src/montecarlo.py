@@ -5,7 +5,30 @@ Collection of Monte Carlo optimizers
 import math
 
 import numpy
+import pylab
 
+
+def normal_rand(mean, stddev):
+    """
+    Return sample from a Normal distribution.
+    """
+    
+    u1 = numpy.random.uniform(-1, 1)
+    
+    u2 = numpy.random.uniform(-1, 1)
+    
+    r = u1**2 + u2**2
+    
+    while r >= 1.0:
+
+        u1 = numpy.random.uniform(-1, 1)
+    
+        u2 = numpy.random.uniform(-1, 1)
+    
+        r = u1**2 + u2**2    
+
+    return mean + stddev*u2*math.sqrt(-2*math.log(r)/r)
+    
 
 def flip(bias):
     """
@@ -28,7 +51,14 @@ def flip(bias):
         return 1
 
 
-def mutation(value, lower, upper, size):
+def mutate(value, lower, upper, size):
+    """
+    Mutate value in the domain [lower,upper] with mutation 'size' as a decimal 
+    percentage of the domain.
+    WARNING:
+        Doesn't work if the mutation size is too big and breaches both ends
+        of the domain! 
+    """
     
     # Define a random size for the mutation in the domain
     deltav = size*(upper - lower)
@@ -71,7 +101,11 @@ def mutation(value, lower, upper, size):
     return mutated
 
 
-def mutated_rw(func, lower, upper, num_agentes, prob_mutation, size_mutation):
+def mutated_rw(func, lower, upper, num_agentes, prob_mutation=0.01, \
+               size_mutation=0.1, max_it=100, threshold=0.8):
+    """
+    Random Walk with mutations.
+    """
     
     # Generate random agents
     agents = numpy.zeros(num_agentes)
@@ -84,25 +118,40 @@ def mutated_rw(func, lower, upper, num_agentes, prob_mutation, size_mutation):
         
         goals[i] = func(agents[i])
         
+        if i == 0 or best_goal > goals[i]:
+            
+            best_agent = agents[i]
+            
+            best_goal = goals[i]
+            
     survivors = []
     
-    while len(survivors) != num_agentes:
+    for iteration in xrange(max_it):
+            
+        survivors = []
         
         # Kill all the unworthy! (according to a survival probability)        
         for i in xrange(num_agentes):
                         
-            survival_prob = (goals[i] - min(goals))/max(goals)
+            survival_prob = math.exp(-abs((goals[i] - min(goals))/min(goals)))
             
             if flip(survival_prob):
                 
                 survivors.append(agents[i])
+                
+        if len(survivors) >= threshold*num_agentes:
+            
+            print "Enough survivors: %d out of %d" % (len(survivors), \
+                                                      num_agentes)
+            
+            break
                 
         # Mutate the survivors
         for i in xrange(len(survivors)):
             
             if flip(prob_mutation):
             
-                agents[i] = mutation(survivors[i], lower, upper, size_mutation)
+                agents[i] = mutate(survivors[i], lower, upper, size_mutation)
             
             else:
                 
@@ -110,15 +159,27 @@ def mutated_rw(func, lower, upper, num_agentes, prob_mutation, size_mutation):
             
             goals[i] = func(agents[i])
             
+            if best_goal > goals[i]:
+                
+                best_agent = agents[i]
+                
+                best_goal = goals[i]
+            
         for i in xrange(len(survivors), num_agentes):
             
             agents[i] = numpy.random.uniform(lower, upper)
             
             goals[i] = func(agents[i])
             
-        survivors = []
-        
-    return agents, goals
+            if best_goal > goals[i]:
+                
+                best_agent = agents[i]
+                
+                best_goal = goals[i]        
+    
+    print "Needed %d iterations." % (iteration + 1)
+    
+    return best_agent, best_goal, agents, goals
             
                 
                  
