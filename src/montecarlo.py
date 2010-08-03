@@ -7,6 +7,9 @@ import math
 import numpy
 import pylab
 
+from evolutionary import mutate
+
+
 
 def normal_rand(mean, stddev):
     """
@@ -51,60 +54,11 @@ def flip(bias):
         return 1
 
 
-def mutate(value, lower, upper, size):
-    """
-    Mutate value in the domain [lower,upper] with mutation 'size' as a decimal 
-    percentage of the domain.
-    WARNING:
-        Doesn't work if the mutation size is too big and breaches both ends
-        of the domain! 
-    """
-    
-    # Define a random size for the mutation in the domain
-    deltav = size*(upper - lower)
-    
-    vmax = value + deltav
-    
-    vmin = value - deltav
-
-    if vmax > upper:
-        
-        # Percentage of the the total mutation size that fell in the domain
-        bias = (upper - value)/deltav
-        
-        mutated = numpy.random.uniform(vmin, upper)
-        
-        # This compensated for the smaller region after 'value'
-        while not (mutated >= value or flip(bias)):
-        
-            mutated = numpy.random.uniform(vmin, upper)
-            
-    elif vmin < lower:
-        
-        # Do the same as above but in the case where the mutation size breaches
-        # the lower bound of the domain
-        bias = (value - lower)/deltav
-                        
-        mutated = numpy.random.uniform(lower, vmax)
-        
-        # This compensated for the smaller region after 'value'
-        while not (mutated <= value or flip(bias)):
-        
-            mutated = numpy.random.uniform(lower, vmax)
-            
-    else:
-        
-        # If the mutation size doesn't breach the domain bounds, just make a 
-        # random mutation        
-        mutated = numpy.random.uniform(vmin, vmax)
-        
-    return mutated
-
 
 def mutated_rw(func, lower, upper, num_agentes, prob_mutation=0.01, \
                size_mutation=0.1, max_it=100, threshold=0.8):
     """
-    Random Walk with mutations.
+    Random Walk with mutations. (1D)
     """
     
     # Generate random agents
