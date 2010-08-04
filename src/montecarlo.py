@@ -8,7 +8,7 @@ import numpy
 import pylab
 
 from evolutionary import mutate
-from random import flip
+from hm_random import flip
 
 def mutated_rw(func, lower, upper, num_agentes, prob_mutation=0.01, \
                size_mutation=0.1, max_it=100, threshold=0.8):

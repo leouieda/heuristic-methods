@@ -5,7 +5,7 @@ Evolutionary optimizations
 
 import numpy
 
-from random import flip
+from hm_random import flip
 
 
 def mutate(value, lower, upper, size):
@@ -58,7 +58,7 @@ def mutate(value, lower, upper, size):
     return mutated
 
 
-def mean_recomb(x, y):
+def mean_recomb(x, x_fit, y, y_fit):
     """
     Do a recombination of x and y using their mean
     
@@ -96,7 +96,7 @@ def wmean_recomb(x, x_fit, y, y_fit):
 
 
 
-def recomb_pop(population, fitness, recomb, lower, upper):
+def recomb_pop(population, pop_fitness, recomb, lower, upper):
     """
     Recombines the whole population according to a fitness function and a 
     recombination strategy.
@@ -106,8 +106,7 @@ def recomb_pop(population, fitness, recomb, lower, upper):
         population: list of elements in the population. Each element should be
             an Nx1 dimensional array like
             
-        fitness: function object that can evaluate the fitness function given an
-            element of the population
+        pop_fitness: list of the fitness of each element in the population
             
         recomb: function object of the recombination strategy
         
@@ -117,44 +116,153 @@ def recomb_pop(population, fitness, recomb, lower, upper):
     """
     
     assert len(lower) == len(upper) == len(population[0]), \
-        "upper and lower must have the same number of elements as there are" + \
-        " dimensions in the problem"
+        "upper and lower must have the same number of elements " + \
+        "as there are dimensions in the problem"
+
+    assert len(pop_fitness) == len(population), \
+        "Need a fitness value for every element in the population."
 
     new_pop = []
     
-    for i, element in zip(xrange(len(population)), population):
+    pop_size = len(population) 
+    
+    for i, element, fitness in zip(xrange(pop_size), population, pop_fitness):
                 
-        if flip(fitness(element)):
+        if flip(fitness):
             
-            left_over = population[0:i] + population[i+1:]
+            left_over_pop = population[0:i] + population[i+1:]
+            left_over_fit = pop_fitness[0:i] + pop_fitness[i+1:]
             
-            for mate in left_over:
+            for mate, mate_fitness in zip(left_over_pop, left_over_fit):
                 
-                if flip(fitness(mate)):
+                if flip(mate_fitness):
                     
-                    child = recomb(element, mate)
+                    child = recomb(element, fitness, mate, mate_fitness)
 
                     new_pop.append(child)
                     
-                    if len(new_pop) == len(population):
+                    if len(new_pop) == pop_size:
                         
                         break
         
-        if len(new_pop) == len(population):
+        if len(new_pop) == pop_size:
             
             break
     
-    while len(new_pop) != len(population):
+    while len(new_pop) != pop_size:
         
         estimate = []
         
-        for i in xrange(len(lower)):
+        for l, u in zip(lower, upper):
             
-            estimate.append(numpy.random.uniform(lower[i], upper[i]))
+            estimate.append(numpy.random.uniform(l, u))
             
         new_pop.append(numpy.array(estimate))
     
     return new_pop
             
-            
+
+
+def evolve(fitness, goal, dims, pop_size, lower, upper, prob_mutation=0.005, \
+           mutation_size=0.1, max_it=100):
+    """
+    Evolve a population using a given fitness criterion.
+    
+    Parameters:
+    
+        fitness: function object that calculates the fitness of each element in
+                 the population. Input: list of elements representing the 
+                 population. Each element is a list of size 'dims'. 
+                 Output: List with the fitness of each element as a float value
+                 in the range [0:1]
+                 
+        goal: function object that calculates the goal function due to an
+              element of the population
+                 
+        dims: number of dimensions in the problem
         
+        pop_size: how many individuals in the population
+        
+        lower: list with the lower bounds of the parameter space
+        
+        upper: list with the upper bounds of the parameter space
+        
+        prob_mutation: the probability of a mutation occurring at each iteration
+        
+        mutation_size: percentage of the parameter space that will be allowed
+                       during the mutation
+        
+        max_it: maximum number of iterations
+        
+    Output:
+        
+        [best_elements, best_goals]
+            best_elements: list with the optimum element at each iteration
+            best_goals: list with the goal function value of each optimum 
+                        element       
+    """
+    
+    assert len(lower) == len(upper) == dims, \
+        "upper and lower must have the same number of elements " + \
+        "as there are dimensions in the problem"
+    
+    assert prob_mutation >= 0 and prob_mutation <= 1, \
+        "prob_mutation must be in the range [0:1]"
+    
+    
+    # Begin with a random population
+    population = []
+    
+    for i in xrange(pop_size):
+                
+        estimate = []
+        
+        for l, u in zip(lower, upper):
+            
+            estimate.append(numpy.random.uniform(l, u))
+            
+        population.append(numpy.array(estimate))
+        
+    pop_fitness = fitness(population)    
+    
+    best_fit = max(pop_fitness)
+    
+    best = [population[pop_fitness.index(best_fit)]]
+    
+    best_goal = [goal(*best[-1])]
+    
+    # Evolve until reaching stagnation or max_it
+    for iteration in xrange(max_it):
+        
+        population = recomb_pop(population, pop_fitness, wmean_recomb, \
+                                lower, upper)
+    
+        # Mutate the unlucky ones
+        for element in population:
+            
+            if flip(prob_mutation):
+                
+                p = numpy.random.randint(dims)
+                
+                element[p] = mutate(element[p], lower[p], upper[p], \
+                                    size=mutation_size)
+        
+        pop_fitness = fitness(population)
+    
+        best_fit = max(pop_fitness)
+        
+        best.append(population[pop_fitness.index(best_fit)])
+            
+        best_goal.append(goal(*best[-1]))
+        
+        print "it %d:" % (iteration)
+        print "  best goal:", best_goal[-1]
+        print "  best:", best[-1]
+
+        if abs((best_goal[-1] - best_goal[-2])/best_goal[-2]) <= 10**(-4):
+            
+            break
+    
+    return best, best_goal
+    
+    

@@ -10,7 +10,7 @@ print "x:", x
 print "y:", y
 print "Recombinations:"
 
-z = mean_recomb(x, y)
+z = mean_recomb(x, None, y, None)
 print "  mean:"
 print "    ", z
 
@@ -20,14 +20,14 @@ z = wmean_recomb(x, x_fit, y, y_fit)
 print "  weighted mean (x_fit=%g, y_fit=%g):" % (x_fit, y_fit)
 print "    ", z
 
-
-def fitness(estimate):
-    return 0
-
-pop = [x, y]
-
-newpop = recomb_pop(pop, fitness, mean_recomb, lower=numpy.zeros(10), \
+z = range(2, 12)
+pop = [x, y, z]
+newpop = recomb_pop(pop, [1,1,0], mean_recomb, lower=numpy.zeros(10), \
                     upper=10*numpy.ones(10))
+print "  pop:"
+for element in pop:
+    print "    old:", element
 
-print newpop
+for element in newpop:
+    print "    new:", element
 
