@@ -8,52 +8,7 @@ import numpy
 import pylab
 
 from evolutionary import mutate
-
-
-
-def normal_rand(mean, stddev):
-    """
-    Return sample from a Normal distribution.
-    """
-    
-    u1 = numpy.random.uniform(-1, 1)
-    
-    u2 = numpy.random.uniform(-1, 1)
-    
-    r = u1**2 + u2**2
-    
-    while r >= 1.0:
-
-        u1 = numpy.random.uniform(-1, 1)
-    
-        u2 = numpy.random.uniform(-1, 1)
-    
-        r = u1**2 + u2**2    
-
-    return mean + stddev*u2*math.sqrt(-2*math.log(r)/r)
-    
-
-def flip(bias):
-    """
-    Flips a biased coin.
-    Returns 1 for heads, 0 for tails 
-    
-    Parameters:
-    
-        bias: probability of returning heads
-    """
-    
-    res = numpy.random.random()
-        
-    if res > bias:
-        
-        return 0
-    
-    else:
-        
-        return 1
-
-
+from random import flip
 
 def mutated_rw(func, lower, upper, num_agentes, prob_mutation=0.01, \
                size_mutation=0.1, max_it=100, threshold=0.8):

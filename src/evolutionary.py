@@ -5,7 +5,7 @@ Evolutionary optimizations
 
 import numpy
 
-from montecarlo import flip
+from random import flip
 
 
 def mutate(value, lower, upper, size):
@@ -96,7 +96,7 @@ def wmean_recomb(x, x_fit, y, y_fit):
 
 
 
-def recomb_pop(population, fitness, recomb):
+def recomb_pop(population, fitness, recomb, lower, upper):
     """
     Recombines the whole population according to a fitness function and a 
     recombination strategy.
@@ -110,7 +110,15 @@ def recomb_pop(population, fitness, recomb):
             element of the population
             
         recomb: function object of the recombination strategy
+        
+        lower: list with the lower bounds of the parameter space
+        
+        upper: list with the upper bounds of the parameter space
     """
+    
+    assert len(lower) == len(upper) == len(population[0]), \
+        "upper and lower must have the same number of elements as there are" + \
+        " dimensions in the problem"
 
     new_pop = []
     
@@ -136,8 +144,15 @@ def recomb_pop(population, fitness, recomb):
             
             break
     
-    # TODO: Fill the new_pop left over with random elements
-    
+    while len(new_pop) != len(population):
+        
+        estimate = []
+        
+        for i in xrange(len(lower)):
+            
+            estimate.append(numpy.random.uniform(lower[i], upper[i]))
+            
+        new_pop.append(numpy.array(estimate))
     
     return new_pop
             
