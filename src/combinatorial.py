@@ -5,19 +5,20 @@ Depends on graph.Graph class.
 
 import numpy
 
-def random_walk(graph, start, end, num_solutions, threshold=0.8, max_it=100):
+def randint_individual(size):
     """
-    Look for the shortest path in a graph from start to end using a random walk
-    
-    Parameters:
-    
-        graph: instance of graph.Graph
-        
-        start: key identifying the staring node
-        
-        end: key identifying the end node
-        
-        num_solutions: how many solutions to generate
-        
-        threshold: percentage of solutions that
+    Make a random individual with integer values from 0 to size
     """
+    
+    index_buffer = range(size)
+    
+    individual = []
+    
+    while len(index_buffer) > 0:
+        
+        index = numpy.random.randint(len(index_buffer))
+        
+        individual.append(index_buffer.pop(index))
+        
+    return individual
+    

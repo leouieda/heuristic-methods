@@ -266,3 +266,48 @@ def evolve(fitness, goal, dims, pop_size, lower, upper, prob_mutation=0.005, \
     return best, best_goal
     
     
+    
+def discrete_crossover(male, female):
+    """
+    Cross the genes of the 2 mates given. (Overwrites the arrays)
+    """
+    
+    assert len(male) == len(female), \
+        "Male and female must have the same number of genes"
+    
+    ngenes = len(male)
+        
+    cross_point = numpy.random.randint(ngenes)
+    
+    if cross_point > 0.5*ngenes:
+        
+        rest = range(cross_point, ngenes) 
+    
+    else:
+        
+        rest = range(0, cross_point)
+        
+    for i in rest:
+    
+        tmp = male[i]
+        male[i] = female[i]
+        female[i] = tmp
+        
+        
+def dicrete_mutate(individual):
+    """
+    Swap two random genes of individual
+    """
+    
+    ngenes = len(individual)
+    
+    gene1 = numpy.random.randint(ngenes)
+    
+    gene2 = numpy.random.randint(ngenes)
+    
+    tmp = individual[gene1]
+    
+    individual[gene1] = individual[gene2]
+    
+    individual[gene2] = tmp
+        
