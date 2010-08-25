@@ -42,11 +42,13 @@ def crossover(male, female):
     
     for i in xrange(middle, nbits):
         
-        tmp = child1[i]
+        if child1[i] != child2[i]:
+            
+            tmp = child1[i]
         
-        child1[i] = child2[i]
+            child1[i] = child2[i]
         
-        child2[i] = tmp
+            child2[i] = tmp
         
     return child1, child2
 
@@ -129,17 +131,91 @@ def new_generation(population, fitness, crossover_prob):
         
         missing = popsize - len(new_population)
         
-        nbits = len(new_population[0])
+        nbits = len(population[0])
         
         random_guys = hm.randomwalks.genetic(missing, nbits)
                 
         new_population.extend(random_guys)
                 
     return new_population
+
+
+def phenotype(chromosome, bits_per_dim, lower, upper, fmt='gray'):
+    """
+    Decode the whole chromosome to produce a human-readable list of float 
+    variables.
+    
+    Parameters:
+    
+        chromosome: lits of binary values describing the chromosome.
+        
+        bits_per_dim: list with the number of bits used for each variable
+        
+        lower: list of lower bounds of the parameter space
+        
+        upper: list of upper bounds of the parameter space
+        
+    Returns:
+        list of decoded variables.
+    """
+    
+    assert len(bits_per_dim) == len(lower) == len(upper), \
+        "bits_per_dim, lower and upper must have the same length"
+    
+    ndims = len(bits_per_dim)
+    
+    res = []
+    
+    start = 0
+    
+    for dim, nbits in zip(range(ndims), bits_per_dim):
+        
+        end = start + nbits
+        
+        var = hm.codec.decode(chromosome[start:end], lower[dim], upper[dim], \
+                              fmt)
+        
+        res.append(var)
                 
+        start = end
+        
+    return res
+
               
-def ga(pop_size, sig_digits, lower, upper, fitness_func, \
-       mutation_prob=0.005, crossover_prob=0.10, max_it=1000):
+def population_fitness(function, population):
+    """
+    Compute the fitness of each element in the population. The fittest are the
+    ones with smallest value of 'function'
+    
+    Parameters:
+    
+        function: function object that evaluates the goal function of each 
+                  element. Elements are lists of parameters.
+                  
+        population: list of elements with the PHENOTYPES of the population
+        
+    Returns:
+    
+        list with the fitness of each in the range [0,1]
+    """    
+    
+    goals = []
+    
+    for element in population:
+        
+        goals.append(function(*element))
+        
+    fit = []
+    
+    for goal in goals:
+        
+        fit.append(math.exp(-abs((goal - min(goals))/min(goals))))
+        
+    return fit    
+              
+              
+def solve(function, pop_size, sig_digits, lower, upper, \
+          mutation_prob=0.005, crossover_prob=0.10, max_it=1000):
     """
     Genetic Algorithm.
     Evolves a population to find the best solution according to a fitness
@@ -152,36 +228,56 @@ def ga(pop_size, sig_digits, lower, upper, fitness_func, \
     
     population = hm.randomwalks.genetic(pop_size, totalbits)
     
-    fitness = fitness_func(population)
+    float_pop = [phenotype(chromo, bits_per_dim, lower, upper) \
+                 for chromo in population]
+    
+    fitness = population_fitness(function, float_pop)
        
     hm.utils.sort_by_fitness(population, fitness)
            
-    best_individual = numpy.copy(population[0])
+    generation_best = phenotype(population[0], bits_per_dim, lower, upper)
+           
+    best_individuals = [generation_best]
     
-    best_fitness = fitness[0]
+    goals = [function(*generation_best)]
     
+    best_goals = [goals[-1]]
+        
     for generation in xrange(max_it):
         
+        # Mate for a new generation
         population = new_generation(population, fitness, crossover_prob)
         
+        # Mutate the unlucky ones
         for i in xrange(pop_size):
             
             if hm.utils.flip(mutation_prob):
                 
-                mutate(population[i])
-                
-        fitness = fitness_func(population)
+                mutate(population[i])           
+    
+        # Decode the population to recompute their fitness
+        float_pop = [phenotype(chromo, bits_per_dim, lower, upper) \
+                     for chromo in population]
+        
+        fitness = population_fitness(function, float_pop)
        
         hm.utils.sort_by_fitness(population, fitness)
+                      
+        generation_best = phenotype(population[0], bits_per_dim, lower, upper)
         
-        if fitness[0] > best_fitness:
+        goals.append(function(*generation_best))
+        
+        if goals[-1] < best_goals[-1]:
                
-            best_individual = numpy.copy(population[0])
+            best_individuals.append(generation_best)
+        
+            best_goals.append(goals[-1])
+                
+        if generation >= 0.5*max_it and \
+           abs((goals[-1] - goals[-2])/goals[-2]) < 10**(-7):
             
-            best_fitness = fitness[0]
-            
-    best_individual = hm.codec.decode(best_individual, lower, upper)
-            
-    return best_individual, best_fitness
+            break        
+                                
+    return best_individuals, best_goals, goals
                 
                 

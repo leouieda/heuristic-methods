@@ -4,7 +4,7 @@ Encode and decode floating point numbers to binary format
 
 import hm.codec
     
-number = 0.0
+number = 1
 lower = -8
 upper = 8
 sig_dig = 5
@@ -16,6 +16,6 @@ a = hm.codec.encode(number, lower, upper, sig_dig)
 print "Binary:", a
 print "Used %d bits." % (len(a))
 print "Decoding:"
-b = hm.codec.decode(a, lower, upper)
+b = hm.codec.decode(a, lower, upper, fmt='std')
 
 print '%.15f' % (b)

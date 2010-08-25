@@ -1,3 +1,4 @@
-Doubts:
+GA:
+    apply evolutive pressure
 
-    GA_crossover: new individual cross with old ones?
+    

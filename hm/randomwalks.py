@@ -27,7 +27,7 @@ def continuous(how_many, ndims, lower, upper):
         list with generated points
     """
     
-    assert len(lower) == ndims and len(upper) == ndims, 
+    assert len(lower) == ndims and len(upper) == ndims, \
         "Must have 'ndims' values in both 'lower' and 'upper'"
     
     population = []
@@ -78,3 +78,37 @@ def genetic(pop_size, nbits):
         population.append(individual)
         
     return population
+
+
+def salesman(pop_size, ncities):
+    """
+    Generate random routes for the traveling salesman problem.
+    Always starts and ends in city 0
+    
+    Parameters:
+    
+        pop_size: how many routes to generate
+        
+        ncities: number of cities to visit
+        
+    Returns:
+    
+        list of routes. Each route is a list with the city indexes in the order
+        visited
+    """
+    
+    population = []
+    
+    for i in xrange(pop_size):        
+        
+        buffer = range(1, ncities)
+        
+        route = [buffer.pop(numpy.random.randint(N)) \
+                 for N in xrange(ncities - 1, 0, -1)]
+            
+        population.append(route)
+        
+    return population
+            
+            
+            

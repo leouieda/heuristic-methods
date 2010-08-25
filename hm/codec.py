@@ -6,6 +6,45 @@ import math
 import numpy
 
 
+formats = ['gray', 'std']
+
+
+def gray2int(gray_binary):
+    """
+    Convert a Gray format binary to an integer.
+    
+    Parameters:
+    
+        gray_binary: list of ones and zeros in Gray format
+        
+    Returns:
+        
+        Corresponding integer value
+    """
+    
+    integer = 0
+    aux = 0
+    nbits = len(gray_binary)
+    
+    for i in xrange(nbits - 1, -1, -1):
+        
+        if gray_binary[i] == 1:
+            
+            if aux == 0:
+               
+                aux = 1
+               
+            else:
+                
+                aux = 0
+                
+        if aux == 1:
+            
+            integer += 2**i
+            
+    return integer
+         
+
 def bin2int(binary):
     """
     Convert a binary sequence to an unsigned integer.
@@ -78,13 +117,33 @@ def encode(number, lower, upper, sig_digits):
     return int2bin(integer, nbits)
 
     
-def decode(binary, lower, upper):
+def decode(binary, lower, upper, fmt='gray'):
     """
     Decode a binary sequence into a floating point in the range [lower,upper]
+    
+    Parameters:
+    
+        binary: list of ones and zeros with the binary code
+        
+        lower: lower range allowed for 'number'
+        
+        upper: upper range allowed for 'number'
+        
+        fmt: either 'gray' for Grays binary format or 'std' for the standard
     """
+        
+    assert fmt in formats, "Unknown binary format '%s'" % (fmt)
 
     nbits = len(binary)
     
     constant = float(upper - lower)/(2**nbits - 1)
     
-    return constant*bin2int(binary) + lower
+    if fmt == 'gray':
+        
+        integer = gray2int(binary)
+        
+    if fmt == 'std':
+        
+        integer = bin2int(binary)
+    
+    return constant*integer + lower
