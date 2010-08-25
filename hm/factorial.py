@@ -36,7 +36,6 @@ def ifactorial(x):
     return res
 
 
-
 def afactorial(x):
     """
     Approximate the factorial using Stirling's formula
@@ -72,4 +71,3 @@ def pfactorial(x):
         res *= primes[i]**pfactors[i]
 
     return [res, pfactors]
-

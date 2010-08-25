@@ -88,23 +88,3 @@ def decode(binary, lower, upper):
     constant = float(upper - lower)/(2**nbits - 1)
     
     return constant*bin2int(binary) + lower
-
-
-
-if __name__ == '__main__':
-    
-    number = 0.1
-    lower = -10**2
-    upper = 10**2
-    sig_dig = 5
-    
-    print "Encoding %g to binary:" % (number)
-    print "  range = [%g, %g]" % (lower, upper)
-    print "  %d significant digits" % (sig_dig)
-    a = encode(number, lower, upper, sig_dig)
-    print a
-    print "Used %d bits." % (len(a))
-    print "Decoding:"
-    b = decode(a, lower, upper)
-    
-    print '%.15f' % (b)

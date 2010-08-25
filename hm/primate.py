@@ -56,22 +56,3 @@ def factor(n, primes):
             aux = res % primes[i]
 
     return factors
-   
-
-
-if __name__ == '__main__':
-    
-    import sys
-
-    n = int(sys.argv[1])
-
-    ps = primes(n)
-
-    print ps
-
-    f = factor(n, ps)
-
-    print f
-	
-
-        

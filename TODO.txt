@@ -1,9 +1,3 @@
-Tarefas:
+Doubts:
 
-    Menor caminho no grafo com random walk
-    depois faz isso com mutacao
-    Concertar doc para random_walk
-    mutated_rw para n dimensoes
-    Concertar cooling schedule no annealing
-    
-    Mutate whole pop
+    GA_crossover: new individual cross with old ones?
