@@ -10,6 +10,9 @@ import hm.utils
 import hm.genetic
 
 
+earth_radius = 6371.
+
+
 def build_distance_table(cities, type='cartesian'):
     """
     Build the distances table.
@@ -27,6 +30,11 @@ def build_distance_table(cities, type='cartesian'):
         the distances table
     """
     
+    assert type in ['geographic', 'cartesian'], \
+        "Invalid coordinate type '%s'" % (type)
+    
+    d2r = math.pi/180.
+    
     ncities = len(cities)
     
     table = numpy.zeros((ncities, ncities))
@@ -38,8 +46,18 @@ def build_distance_table(cities, type='cartesian'):
             xi, yi = cities[i]
             
             xj, yj = cities[j]
+            
+            if type == 'cartesian':
 
-            distance = math.sqrt((xi - xj)**2 + (yi - yj)**2)
+                distance = math.sqrt((xi - xj)**2 + (yi - yj)**2)
+                
+            if type == 'geographic':
+                                
+                cos_arc = math.sin(d2r*yi)*math.sin(d2r*yj) + \
+                          math.cos(d2r*yi)*math.cos(d2r*yj)* \
+                          math.cos(d2r*(xi - xj))
+                
+                distance = math.sqrt(2*(earth_radius**2)*(1 - cos_arc))
 
             table[i][j] = distance
             
@@ -333,24 +351,4 @@ def solve_ga(dist_table, ncities, pop_size, \
             
             break
                                 
-    return best_individuals, best_distances, distances
-    
-    
-    
-    
-if __name__ == '__main__':
-    
-    route = [2, 5, 1, 4, 3]
-    print "route:", route
-    chromo = genotype(route)
-    print "chromosome:", chromo
-    pheno = phenotype(chromo)
-    print "phenotype:", pheno
-    i = mutate(chromo)
-    print "mut chromo:", chromo
-    print "mut pheno:", phenotype(chromo)
-    print "mut index:", i
-    
-    
-    
-    
+    return best_individuals, best_distances, distances        
