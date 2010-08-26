@@ -295,6 +295,38 @@ def mutate(individual):
     return index
     
     
+def selective_pressure(population, fitness, percent):
+    """
+    Apply some selective pressure to a population. Basically means killing some
+    people and putting random individuals in their place.
+    
+    Parameters:
+            
+        population: list of individuals. Each individual is an encoded route
+                    (a genotype of the route)
+        
+        fitness: list with the fitness value of each individual. Values must be
+                 in the range [0,1]
+                 
+        percent: decimal percentage of survivors        
+    
+    OBS: replaces the original population
+    """
+    
+    assert len(population) == len(fitness), \
+        "Must have a fitness value for each individual."
+        
+    assert 1 >= percent >= 0, \
+        "Percentage of survivors must be with range [0,1]"
+    
+    popsize = len(population)
+    
+    index = int(percent*popsize)
+    
+    
+    
+    
+    
 def solve_ga(dist_table, ncities, pop_size, \
              mutation_prob=0.005, crossover_prob=0.10, max_it=1000):
     """

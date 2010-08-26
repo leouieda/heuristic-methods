@@ -18,8 +18,8 @@ upper = [20,20]
 step = 0.5 # Discretization size to make the plot of the eggbox
 sig_digits = [5]*2
 pop_size = 200
-mutation_prob = 0.01
-crossover_prob = 0.7
+mutation_prob = 0.005
+crossover_prob = 0.6
 max_it = 100
 
 best, best_goal, goals = hm.genetic.solve(hm.functions.eggbox, \

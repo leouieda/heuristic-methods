@@ -1,0 +1,34 @@
+Loading city data from file brasil_capitals.txt
+  26 city coordinates loaded
+Starting point: RIO_DE_JANEIRO-RJ
+Building the distances table
+Solving...
+Done in 64.0566 seconds
+Best total distance: 18206.5505514
+Best route:
+  0: RIO_DE_JANEIRO-RJ
+  0: FLORIANOPOLIS-SC
+  1: PORTO_ALEGRE-RS
+  2: VITORIA-ES
+  3: SAO_LUIS-MA
+  4: TERESINA-PI
+  5: BELEM-PA
+  6: MACAPA-AP
+  7: MANAUS-AM
+  8: BOA_VISTA-RR
+  9: RIO_BRANCO-AC
+  10: PORTO_VELHO-RO
+  11: CUIABA-MT
+  12: CAMPO_GRANDE-MS
+  13: GOIANIA-GO
+  14: BRASILIA-DF
+  15: PALMAS-TO
+  16: FORTALEZA-CE
+  17: NATAL-RN
+  18: JOAO_PESSOA-PB
+  19: RECIFE-PE
+  20: MACEIO-AL
+  21: SALVADOR-BA
+  22: BELO_HORIZONTE-MG
+  23: SAO_PAULO-SP
+  24: CURITIBA-PR

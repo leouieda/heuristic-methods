@@ -1,4 +1,5 @@
 GA:
     apply evolutive pressure
+    finish it in salesman
 
     

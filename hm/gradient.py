@@ -1,8 +1,10 @@
 """
-Collection of gradient optimizers
+Collection of gradient optimizers:
+    1) Newton's method
 """
 
 import numpy
+
 
 def gradient(func, dims, params, delta):
     """
@@ -97,65 +99,3 @@ def newton(func, dims, initial, maxit=100, stop=10**(-15)):
             break
         
     return solution, goals[-1], numpy.array(estimates), goals
-
-
-if __name__ == '__main__':
-    
-    from test_functions import twomin, eggbox
-    import pylab
-    
-    # TWOMIN
-    x = numpy.arange(-10,10)
-    y = twomin(x)
-    
-    pylab.figure()
-    pylab.title("Twomin")
-    pylab.plot(x, y, '-b')
-    
-    solution, goal, estimates, goals = newton(func=twomin, dims=1, \
-                                initial=[10], maxit=100, stop=10**(-15))
-    
-    print "Min =", goal, "at", solution
-    print "Took %d iterations" % (len(goals))
-
-    pylab.plot(estimates, goals, '*k')
-    pylab.plot(solution, goal, '^y')
-    
-    pylab.figure()
-    pylab.title("Twomin Goal function")
-    pylab.plot(goals, '-k')  
-    
-    # EGGBOX
-    x = numpy.arange(-25, 25.5, 0.5)
-    y = numpy.arange(-25, 25.5, 0.5)    
-    X, Y = pylab.meshgrid(x, y)
-    Z = eggbox(X, Y)
-    
-    best_estimate, best_goal, estimates, goals = newton(func=eggbox, dims=2, \
-                        initial=[11.6,0.7], maxit=100, stop=10**(-15))
-        
-    print "Best solution:", best_goal
-    print "at:", best_estimate
-        
-    fig = pylab.figure()
-    
-    pylab.title("Eggbox")
-    pylab.contourf(X, Y, Z, 40)
-    pylab.colorbar()
-    
-    pylab.plot(estimates.T[0], estimates.T[1], '*k')   
-    pylab.plot(0, 0, 'oy', label='global minimum')    
-    pylab.plot(best_estimate[0], best_estimate[1], '^c', label='best solution') 
-    pylab.legend(numpoints=1, prop={'size':9})
-        
-    pylab.xlabel("X")
-    pylab.ylabel("Y")
-    pylab.xlim(-25, 25)
-    pylab.ylim(-25, 25)
-    
-    pylab.figure()
-    pylab.title("Eggbox Goal function")
-    pylab.plot(goals, '-k')
-    pylab.xlabel("Iteration")
-    
-    pylab.show()
