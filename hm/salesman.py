@@ -101,7 +101,7 @@ def total_distance(route, dist_table):
              
 def population_fitness(dist_table, population):
     """
-    Compute the fitness of each element in the population. The fitest are the
+    Compute the fitness of each element in the population. The fittest are the
     ones with smallest total distance
     
     Parameters:
@@ -122,13 +122,32 @@ def population_fitness(dist_table, population):
         
         goals.append(total_distance(route, dist_table))
         
-    fit = []
+    maxdist = max(goals)
     
-    for goal in goals:
+    mindist = min(goals)
         
-        fit.append(math.exp(-abs((goal - min(goals))/min(goals))))
+    a = -0.8/(maxdist - mindist)
+            
+    fitness = []
+    
+    for dist in goals:
         
-    return fit
+#        fit = 0.6*math.exp(-abs((dist - mindist)/mindist)) + 0.2
+
+        fit = a*(dist - mindist) + 0.9
+        
+        if fit > 0.9:
+            
+            fit = 0.9
+            
+        if fit < 0.1:
+            
+            fit = 0.1
+            
+        
+        fitness.append(fit)
+        
+    return fitness
 
 
 # GENETIC ALGORITHM FUNCTIONS
@@ -321,7 +340,11 @@ def selective_pressure(population, fitness, percent):
     
     popsize = len(population)
     
-    index = int(percent*popsize)
+    killsize = int(percent*popsize)
+    
+#    replacements = hm.randomwalks.salesman(killsize, ncities)
+    
+#    population[0:killsize] = 
     
     
     
@@ -337,7 +360,7 @@ def solve_ga(dist_table, ncities, pop_size, \
     
     fitness = population_fitness(dist_table, phenotypes)
     
-    population = [genotype(route) for route in phenotypes]    
+    population = [genotype(route) for route in phenotypes]
            
     hm.utils.sort_by_fitness(population, fitness)
            

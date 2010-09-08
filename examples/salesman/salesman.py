@@ -19,9 +19,9 @@ cityfile = open(filename, 'r')
 cities = []
 citynames = []
 
-filestring = cityfile.read()
+#filestring = cityfile.read()
 
-for line in filestring.split('\n'):
+for line in cityfile:
     
     if len(line) == 0:
         
@@ -78,13 +78,15 @@ print "Building the distances table"
 
 dist_table = hm.salesman.build_distance_table(cities, type='geographic')
 
+pylab.savetxt("DMAT.txt", dist_table)
+
 print "Solving..."
 
 tstart = time.time()
 
-result = hm.salesman.solve_ga(dist_table, ncities, pop_size=2000, \
-                              mutation_prob=0.01, crossover_prob=0.6, \
-                              max_it=200)
+result = hm.salesman.solve_ga(dist_table, ncities, pop_size=100, \
+                              mutation_prob=0.5, crossover_prob=0.7, \
+                              max_it=1000)
 
 tend = time.time()
 
