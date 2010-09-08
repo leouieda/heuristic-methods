@@ -84,15 +84,18 @@ print "Solving..."
 
 tstart = time.time()
 
-result = hm.salesman.solve_ga(dist_table, ncities, pop_size=100, \
-                              mutation_prob=0.5, crossover_prob=0.7, \
-                              max_it=1000)
+result = hm.salesman.solve_ga(dist_table, ncities, pop_size=500, \
+                              kill_percent=0.4, \
+                              mutation_prob=0.01, crossover_prob=0.75, \
+                              max_gen=1000)
 
 tend = time.time()
 
 print "Done in %g seconds" % (tend - tstart)
 
 best_routes, best_dists, dists = result
+
+print "Generations: %d" % (len(dists))
 
 print "Best total distance:", best_dists[-1]
 print "Best route:"

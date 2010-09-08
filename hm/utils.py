@@ -33,6 +33,26 @@ def sort_by_fitness(population, fitness):
         
         fitness[i] = oldfit[sort_index[i]]   
         
+        
+
+def best_by_fitness(population, fitness):
+    """
+    Get the best individual in the population based on its fitness value.
+    
+    Parameters:
+    
+        population: list of individuals (usually also lists themselves)
+        
+        fitness: list with the fitness value of each individual in population
+    """
+    
+    assert len(population) == len(fitness), \
+        "Must have a fitness value for each individual."
+        
+    best = fitness.index(max(fitness))
+    
+    return population[best]        
+        
     
 def flip(bias):
     """

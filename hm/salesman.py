@@ -132,18 +132,17 @@ def population_fitness(dist_table, population):
     
     for dist in goals:
         
-#        fit = 0.6*math.exp(-abs((dist - mindist)/mindist)) + 0.2
+        fit = 0.6*math.exp(-abs((dist - mindist)/mindist)) + 0.2
 
-        fit = a*(dist - mindist) + 0.9
-        
-        if fit > 0.9:
-            
-            fit = 0.9
-            
-        if fit < 0.1:
-            
-            fit = 0.1
-            
+#        fit = a*(dist - mindist) + 0.9
+#        
+#        if fit > 0.9:
+#            
+#            fit = 0.9
+#            
+#        if fit < 0.1:
+#            
+#            fit = 0.1            
         
         fitness.append(fit)
         
@@ -314,7 +313,7 @@ def mutate(individual):
     return index
     
     
-def selective_pressure(population, fitness, percent):
+def selective_pressure(population, fitness, dist_table, percent):
     """
     Apply some selective pressure to a population. Basically means killing some
     people and putting random individuals in their place.
@@ -326,72 +325,84 @@ def selective_pressure(population, fitness, percent):
         
         fitness: list with the fitness value of each individual. Values must be
                  in the range [0,1]
-                 
-        percent: decimal percentage of survivors        
+                    
+        dist_table: 2D matrix with the distance between the ith and jth cities
+                    
+        percent: decimal percentage of individuals to kill        
     
     OBS: replaces the original population
     """
     
-    assert len(population) == len(fitness), \
-        "Must have a fitness value for each individual."
-        
     assert 1 >= percent >= 0, \
         "Percentage of survivors must be with range [0,1]"
+        
+    ncities = len(dist_table)
     
     popsize = len(population)
     
     killsize = int(percent*popsize)
     
-#    replacements = hm.randomwalks.salesman(killsize, ncities)
+    killstart = numpy.random.randint(popsize - killsize)
     
-#    population[0:killsize] = 
+    routes = hm.randomwalks.salesman(killsize, ncities)
+    
+    replacements = [genotype(route) for route in routes]
+    
+    population[killstart:killstart + killsize] = replacements
+    
+    new_fitness = population_fitness(dist_table, routes)
+    
+    fitness[killstart:killstart + killsize] = new_fitness
     
     
-    
-    
-    
-def solve_ga(dist_table, ncities, pop_size, \
-             mutation_prob=0.005, crossover_prob=0.10, max_it=1000):
+def solve_ga(dist_table, ncities, pop_size, kill_percent=0.3, \
+             mutation_prob=0.005, crossover_prob=0.10, max_gen=1000):
     """
     Solve the problem using Genetic Algorithm
     """
     
+    # Count for how long the total distance of the generation best hasn't 
+    # changed and use this as a stopping criterium
+    stagnated_for = 0
+    
+    # Start with a random population
     phenotypes = hm.randomwalks.salesman(pop_size, ncities)
     
     fitness = population_fitness(dist_table, phenotypes)
     
     population = [genotype(route) for route in phenotypes]
-           
-    hm.utils.sort_by_fitness(population, fitness)
-           
-    generation_best = phenotype(population[0])
+    
+    # Record the best
+    generation_best = hm.utils.best_by_fitness(phenotypes, fitness)
            
     best_individuals = [generation_best]
     
     distances = [total_distance(generation_best, dist_table)]
     
-    best_distances = [distances[-1]]    
+    best_distances = [distances[-1]]
     
-    for generation in xrange(max_it):
+    for generation in xrange(max_gen):
+       
+        # Need to sort so that the best individuals try to mate first
+        hm.utils.sort_by_fitness(population, fitness)
         
         # Mate for a new generation
         population = new_generation(population, fitness, crossover_prob)
         
         # Mutate the unlucky ones
-        for i in xrange(pop_size):
+        for individual in population:
             
             if hm.utils.flip(mutation_prob):
                 
-                mutate(population[i])           
+                mutate(individual)
     
         # Decode the population to recompute their fitness
         phenotypes = [phenotype(chromosome) for chromosome in population]
         
         fitness = population_fitness(dist_table, phenotypes)
-       
-        hm.utils.sort_by_fitness(population, fitness)
-                                 
-        generation_best = phenotype(population[0])
+        
+        # Record the best and check if should stop    
+        generation_best = hm.utils.best_by_fitness(phenotypes, fitness)
     
         distances.append(total_distance(generation_best, dist_table))
                    
@@ -401,9 +412,17 @@ def solve_ga(dist_table, ncities, pop_size, \
         
             best_distances.append(distances[-1])
                 
-        if generation >= 0.5*max_it and \
+        if generation >= 0.5*max_gen and \
            abs((distances[-1] - distances[-2])/distances[-2]) < 10**(-7):
             
-            break
-                                
+            stagnated_for += 1
+            
+            if stagnated_for == int(0.1*max_gen):
+            
+                break
+        
+        # Kill a percentage of the individuals so that the algorithm doesn't
+        # stagnate
+        selective_pressure(population, fitness, dist_table, kill_percent)
+                                            
     return best_individuals, best_distances, distances        
